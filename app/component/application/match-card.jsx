@@ -1,5 +1,9 @@
 "use client";
 
+import { useEffect, useState } from "react";
+import axios from "axios";
+import Image from "next/image";
+import Link from "next/link";
 import {
   Card,
   CardContent,
@@ -7,6 +11,7 @@ import {
   CardTitle,
   CardDescription,
 } from "@/components/ui/card";
+
 import {
   MatchType1,
   MatchType2,
@@ -14,54 +19,67 @@ import {
   MatchType4,
   MatchType5,
   MatchType6,
+  MatchType1Img,
+  MatchType2Img,
+  MatchType3Img,
+  MatchType4Img,
+  MatchType5Img,
+  MatchType6Img,
 } from "@/config";
-
-import Image from "next/image";
-import Link from "next/link";
 
 const matches = [
   {
     title: MatchType1,
     link: `/matches/?type=${MatchType1}`,
-    image:
-      "https://res.cloudinary.com/dnvlk6ubg/image/upload/v1761068487/br-match_itpoat.jpg",
+    image: MatchType1Img,
   },
   {
     title: MatchType2,
     link: `/matches/?type=${MatchType2}`,
-    image:
-      "https://res.cloudinary.com/dnvlk6ubg/image/upload/v1761068488/clash-squad_u3dkmq.jpg",
+    image: MatchType2Img,
   },
   {
     title: MatchType3,
     link: `/matches/?type=${MatchType3}`,
-    image:
-      "https://res.cloudinary.com/dnvlk6ubg/image/upload/v1761068488/lone-wolf_wombhk.jpg",
+    image: MatchType3Img,
   },
   {
     title: MatchType4,
     link: `/matches/?type=${MatchType4}`,
-    image:
-      "https://res.cloudinary.com/dnvlk6ubg/image/upload/v1761874882/download_vmg5ko.jpg",
+    image: MatchType4Img,
   },
   {
     title: MatchType5,
     link: `/matches/?type=${MatchType5}`,
-    image:
-      "https://res.cloudinary.com/dnvlk6ubg/image/upload/v1761068488/squad-brRank_etzfrb.jpg",
+    image: MatchType5Img,
   },
   {
     title: MatchType6,
     link: `/matches/?type=${MatchType6}`,
-    image:
-      "https://res.cloudinary.com/dnvlk6ubg/image/upload/v1761068487/free-match_k9jszq.jpg",
+    image: MatchType6Img,
   },
 ];
 
 export default function MatchCards() {
+  const [counts, setCounts] = useState({});
+
+  useEffect(() => {
+    const fetchCounts = async () => {
+      try {
+        const res = await axios.get("/api/matchFound");
+
+        await setCounts(res?.data?.data);
+      } catch (err) {
+        console.error("Failed to fetch match counts:", err);
+      }
+    };
+
+    fetchCounts();
+  }, []);
+
   return (
     <div className="p-4">
-      <h2 className="text-lg font-semibold mb-4">MATCHES</h2>
+      <h2 className="text-lg font-semibold mb-4">BR, LONE, CS MATCHES</h2>
       <div className="grid grid-cols-2 gap-4">
         {matches.map((match, index) => (
           <Card
@@ -83,6 +101,10 @@ export default function MatchCards() {
                 <CardTitle className="text-sm font-bold">
                   {match.title}
                 </CardTitle>
+                <CardDescription className="text-xs">
+                  {counts[match.title] !== undefined ? counts[match.title] : 0}{" "}
+                  matches found
+                </CardDescription>
               </CardContent>
             </Link>
           </Card>
