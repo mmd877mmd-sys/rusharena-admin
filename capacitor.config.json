@@ -2,5 +2,9 @@
   "appId": "com.rusharenaadmin.app",
   "appName": "Rush Arena Admin",
   "webDir": "public",
-  "bundledWebRuntime": false
+  "bundledWebRuntime": false,
+  "server": {
+    "url": "https://rusharena-admin.vercel.app/",
+    "cleartext": false
+  }
 }
