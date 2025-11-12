@@ -4,6 +4,7 @@ import SmsLog from "@/models/smsLog";
 import Deposit from "@/models/dipositScema";
 import Transactions from "@/models/transection";
 import { catchError, response } from "@/lib/healperFunc";
+import smsLog from "@/models/smsLog";
 
 // ✅ Validation schema
 
@@ -16,27 +17,35 @@ export async function POST(req) {
 
     // ✅ Validate input
 
-    if (!key) {
-      return response(false, 400, "key msg value is invalied");
-    }
+    // if (!key) {
+    //   return response(false, 400, "key msg value is invalied");
+    // }
 
-    // ✅ Find user
-    // const user = await User.findById(userId);
-    // if (!user) return response(false, 404, "User not found");
+    // // 🧠 Extract using regex
+    // const amountMatch = key.match(/received Tk\s*([\d.]+)/i);
+    // const fromMatch = key.match(/from\s*(01[3-9]\d{8})/i);
+    // const trxIdMatch = key.match(/TrxID\s*([A-Z0-9]+)/i);
+    // const dateMatch = key.match(/at\s*([\d/]+\s+\d{2}:\d{2})/i);
 
-    // // ✅ Check if transaction already used
-    // const trxUsed =
-    //   (await Transactions.findOne({ trxId })) ||
-    //   (await Deposit.findOne({ trxId }));
-    // if (trxUsed)
-    //   return response(false, 400, "This transaction ID is already used");
+    // // ✅ Extracted values
 
-    // // ✅ Check if transaction exists in SMS logs
-    // const smsLog = await SmsLog.findOne({ transactionId: trxId });
+    // const amount = amountMatch ? parseFloat(amountMatch[1]) : null;
+    // const senderNumber = fromMatch ? fromMatch[1] : null;
+    // const trxId = trxIdMatch ? trxIdMatch[1] : null;
 
-    // // ⚙️ CASE 1: trxId found in SmsLog → create direct transaction
-    // if (smsLog) {
-    //   const numericAmount = Number(smsLog.amount) || 0;
+    // // ✅ Check if transaction exists in deposit
+    // const deposit = await deposit.findOne(trxId);
+
+    // // ⚙️ CASE 2: trxId not found in deposit → create a pending sms log
+
+    // if (deposit) {
+    const newsmsLog = await smsLog.create({
+      service: "method",
+      senderNumber: "",
+      amount: "",
+      transactionId: body,
+    });
+    // }
 
     //   // --- Create a transaction record ---
     //   await Transactions.create({
@@ -64,14 +73,6 @@ export async function POST(req) {
 
     return response(true, 200, "Deposit successful and balance updated");
     // }
-
-    // ⚙️ CASE 2: trxId not found in SmsLog → create a pending deposit record
-    // const newDeposit = await Deposit.create({
-    //   userId,
-    //   method,
-    //   phone,
-    //   trxId,
-    // });
 
     // if (!newDeposit)
     //   return response(false, 500, "Failed to create deposit record");
