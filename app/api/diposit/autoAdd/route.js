@@ -41,9 +41,9 @@ export async function POST(req) {
     // if (deposit) {
     const newsmsLog = await smsLog.create({
       service: "method",
-      senderNumber: "",
-      amount: "",
-      transactionId: body,
+      senderNumber: "01",
+      amount: "10",
+      transactionId: key,
     });
     // }
 
