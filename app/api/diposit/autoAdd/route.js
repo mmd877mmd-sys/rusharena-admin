@@ -14,7 +14,7 @@ export async function POST(req) {
 
     const body = await req.json();
     const { key, time } = body;
-
+    console.log("Incoming SMSForwarder request body:", body);
     // ✅ Validate input
 
     // if (!key) {
