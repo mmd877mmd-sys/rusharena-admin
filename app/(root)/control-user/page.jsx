@@ -54,6 +54,11 @@ export default function AdminUserControl() {
     );
   };
 
+  const copyToClipboard = (text) => {
+    navigator.clipboard.writeText(text);
+    showToast("Copied to clipboard!");
+  };
+
   // Update balances
   const updateBalance = async (userId, winbalance, dipositbalance) => {
     try {
@@ -81,7 +86,7 @@ export default function AdminUserControl() {
   return (
     <div className="p-6 min-h-screen bg-gray-950 text-gray-100">
       <h1 className="text-2xl font-semibold mb-6 text-gray-100">
-        Total User : <span className="text-yellow-600"> {users.length}</span>
+        Total Users: <span className="text-yellow-600">{users.length}</span>
       </h1>
 
       {/* Search Bar */}
@@ -100,19 +105,44 @@ export default function AdminUserControl() {
       ) : filteredUsers.length === 0 ? (
         <p className="text-gray-400 text-center">No users found.</p>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+        <div className="grid grid-cols-1  md:grid-cols-2 lg:grid-cols-3 gap-5">
           {filteredUsers.map((user) => (
             <div
               key={user._id}
-              className="p-5 bg-[#5d5656] rounded-xl shadow-lg border border-gray-800 hover:border-blue-500 transition-all"
+              className="p-5 bg-[#443838] rounded-xl shadow-lg border border-gray-800 hover:border-blue-500 transition-all"
             >
-              <h2 className="text-lg font-bold text-white">{user.name}</h2>
-              <p className="text-md text-gray-400">Email: {user.email}</p>
-              <p className="text-md text-gray-400">Phone: {user.phone}</p>
-              <p className="text-md text-gray-400">Password: {user.password}</p>
+              <h2 className="text-lg font-bold text-white mb-3">{user.name}</h2>
 
+              {/* User Info Fields */}
+              {[
+                { label: "Email", value: user.email },
+                { label: "Phone", value: user.phone },
+                { label: "Password", value: user.password },
+              ].map((item) => (
+                <div
+                  key={item.label}
+                  className="border-t border-b border-gray-700 py-2 flex justify-between items-center"
+                >
+                  <div>
+                    <p className="text-sm text-gray-400">{item.label}</p>
+                    <p className="text-white font-medium break-all">
+                      {item.value || "N/A"}
+                    </p>
+                  </div>
+                  {item.value && (
+                    <button
+                      onClick={() => copyToClipboard(item.value)}
+                      className="text-xs bg-blue-600 hover:bg-blue-700 px-2 py-1 rounded-md text-white"
+                    >
+                      Copy
+                    </button>
+                  )}
+                </div>
+              ))}
+
+              {/* Balances */}
               <div className="flex gap-4 mt-3">
-                <div>
+                <div className="w-1/2">
                   <label className="text-sm font-medium text-gray-300">
                     Win Balance
                   </label>
@@ -125,7 +155,7 @@ export default function AdminUserControl() {
                     className="border border-gray-700 bg-gray-800 text-white p-2 rounded w-full focus:ring-2 focus:ring-blue-500 outline-none"
                   />
                 </div>
-                <div>
+                <div className="w-1/2">
                   <label className="text-sm font-medium text-gray-300">
                     Deposit Balance
                   </label>
@@ -144,6 +174,7 @@ export default function AdminUserControl() {
                 </div>
               </div>
 
+              {/* Update Button */}
               <button
                 onClick={() =>
                   updateBalance(user._id, user.winbalance, user.dipositbalance)
