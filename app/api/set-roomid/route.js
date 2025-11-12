@@ -1,4 +1,5 @@
 import { connectDB } from "@/lib/connectDB";
+import { sendGlobalNotification } from "@/lib/sendNotification";
 import Matches from "@/models/matches";
 import { NextResponse } from "next/server";
 // import { sendBroadcastNotification } from "@/lib/notifications";
@@ -42,10 +43,12 @@ export async function POST(req) {
 
     // -----------------------------
     // Send broadcast notification
-    // const title = `Rush Arena Notifications`;
-    // const bodyMessage = `${match.title} Room Id send! please join `;
-    // await sendBroadcastNotification(title, bodyMessage);
-    // -----------------------------
+    const result = await sendGlobalNotification({
+      title: "Rush Arena Match Update  ",
+      body: `${
+        match.matchType || "Rush Arena"
+      } Match এর Room Details দেওয়া হয়েছে . Please Check and Join the Match as soon ass pssible`,
+    });
 
     return NextResponse.json(
       {
