@@ -1,85 +1,99 @@
 import { connectDB } from "@/lib/connectDB";
 import User from "@/models/user";
-import SmsLog from "@/models/smsLog";
-import Deposit from "@/models/dipositScema";
 import Transactions from "@/models/transection";
-import { catchError, response } from "@/lib/healperFunc";
 import smsLog from "@/models/smsLog";
-
-// ✅ Validation schema
+import dipositScema from "@/models/dipositScema";
+import { catchError, response } from "@/lib/healperFunc";
 
 export async function POST(req) {
   try {
     await connectDB();
 
-    const body = await req.json();
+    // --- Parse body safely (supports both JSON & form-data)
+    let body;
+    try {
+      body = await req.json();
+    } catch {
+      const text = await req.text();
+      const params = new URLSearchParams(text);
+      body = Object.fromEntries(params.entries());
+    }
+
     const { key, time } = body;
-    console.log("Incoming SMSForwarder request body:", body);
-    // ✅ Validate input
+    if (!key) return response(false, 400, "Missing 'key' in request body");
 
-    // if (!key) {
-    //   return response(false, 400, "key msg value is invalied");
-    // }
+    // --- Extract values via regex
+    const amountMatch = key.match(/received Tk\s*([\d.]+)/i);
+    const fromMatch = key.match(/from\s*(01[3-9]\d{8})/i);
+    const trxIdMatch = key.match(/TrxID\s*([A-Z0-9]+)/i);
+    const serviceMatch = key.match(/From\s*:\s*([A-Za-z]+)/i);
 
-    // // 🧠 Extract using regex
-    // const amountMatch = key.match(/received Tk\s*([\d.]+)/i);
-    // const fromMatch = key.match(/from\s*(01[3-9]\d{8})/i);
-    // const trxIdMatch = key.match(/TrxID\s*([A-Z0-9]+)/i);
-    // const dateMatch = key.match(/at\s*([\d/]+\s+\d{2}:\d{2})/i);
+    const amount = amountMatch ? parseFloat(amountMatch[1]) : null;
+    const senderNumber = fromMatch ? fromMatch[1] : null;
+    const trxId = trxIdMatch ? trxIdMatch[1] : null;
+    const service = serviceMatch ? serviceMatch[1] : null;
 
-    // // ✅ Extracted values
+    if (!amount || !senderNumber || !trxId || !service) {
+      return response(
+        false,
+        400,
+        "Failed to extract required transaction details"
+      );
+    }
+    const existingTx = await smsLog.findOne({ transactionId: trxId });
+    if (existingTx)
+      return response(false, 409, "Duplicate transaction detected");
 
-    // const amount = amountMatch ? parseFloat(amountMatch[1]) : null;
-    // const senderNumber = fromMatch ? fromMatch[1] : null;
-    // const trxId = trxIdMatch ? trxIdMatch[1] : null;
+    // --- Find matching deposit request
+    const deposit = await dipositScema.findOne({ trxId: trxId });
 
-    // // ✅ Check if transaction exists in deposit
-    // const deposit = await deposit.findOne(trxId);
+    if (!deposit) {
+      // Log as pending SMS if no deposit request found
+      await smsLog.create({
+        service,
+        senderNumber,
+        amount,
+        transactionId: trxId,
+        receivedAt: time ? new Date(time) : new Date(),
+      });
 
-    // // ⚙️ CASE 2: trxId not found in deposit → create a pending sms log
+      return response(
+        true,
+        200,
+        "No deposit found. Logged SMS for later matching."
+      );
+    }
 
-    // if (deposit) {
-    const newsmsLog = await smsLog.create({
-      service: "method",
-      senderNumber: "01",
-      amount: "10",
-      transactionId: key,
+    // --- Create a transaction record
+    const newTx = await Transactions.create({
+      userId: deposit.userId,
+      type: "deposit",
+      method: service,
+      phone: senderNumber,
+      id: trxId,
+      amount,
+      createdAt: new Date(),
     });
-    // }
 
-    //   // --- Create a transaction record ---
-    //   await Transactions.create({
-    //     userId,
-    //     type: "deposit",
-    //     method: smsLog.service || method,
-    //     phone: smsLog.senderNumber || phone,
-    //     id: trxId,
-    //     amount: numericAmount,
-    //     createdAt: new Date(),
-    //   });
+    if (!newTx)
+      return response(false, 500, "Failed to create transaction record");
 
-    //   // --- Update user balance ---
-    //   const updatedUser = await User.findByIdAndUpdate(
-    //     userId,
-    //     { $inc: { dipositbalance: numericAmount } },
-    //     { new: true }
-    //   );
+    // --- Update user balance
+    const updatedUser = await User.findByIdAndUpdate(
+      deposit.userId,
+      { $inc: { dipositbalance: amount } },
+      { new: true }
+    );
 
-    //   if (!updatedUser)
-    //     return response(false, 404, "User not found while updating balance");
+    if (!updatedUser)
+      return response(false, 404, "User not found while updating balance");
 
-    //   // ✅ Delete the used SmsLog record
-    //   await SmsLog.deleteOne({ transactionId: trxId });
+    // --- Clean up: delete matched deposit request
+    await deposit.deleteOne();
 
     return response(true, 200, "Deposit successful and balance updated");
-    // }
-
-    // if (!newDeposit)
-    //   return response(false, 500, "Failed to create deposit record");
-
-    return response(true, 200, "Deposit request submitted successfully!");
   } catch (err) {
-    console.error("Deposit route error:", err);
+    console.error("❌ Deposit route error:", err);
     return catchError(err);
   }
 }
