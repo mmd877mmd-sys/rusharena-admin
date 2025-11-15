@@ -80,6 +80,10 @@ export default function WithdrawListPage() {
                   {withdraw.userId.name}
                 </p>
                 <p>
+                  <span className="text-gray-400">Method:</span>{" "}
+                  {withdraw.method}
+                </p>
+                <p>
                   <span className="text-gray-400">Amount:</span>{" "}
                   {withdraw.amount}
                 </p>
