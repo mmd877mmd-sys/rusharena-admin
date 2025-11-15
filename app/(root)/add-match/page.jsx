@@ -295,6 +295,7 @@ export default function TournamentForm() {
                       <SelectContent>
                         <SelectItem value="Bermuda">Bermuda</SelectItem>
                         <SelectItem value="Bermuda 2.0">Bermuda 2.0</SelectItem>
+                        <SelectItem value="NeXTerra">Lone Wolf</SelectItem>
                         <SelectItem value="Kalahari">Kalahari</SelectItem>
                         <SelectItem value="Purgatory">Purgatory</SelectItem>
                         <SelectItem value="Alpine">Alpine</SelectItem>
