@@ -7,12 +7,11 @@ export default function ContactPage() {
   const [messages, setMessages] = useState();
   const [input, setInput] = useState("");
 
-  // NEW states for notification inputs
-  const [customText, setCustomText] = useState(""); // first input empty
-  const defaultNotificationText =
-    "রুম আইডি পাস দেওয়া হয়েছে ম্যাচ এ জয়েন করো।"; // second input fixed
+  const [customText, setCustomText] = useState("");
+  const [fixedText, setFixedText] = useState(
+    "রুম আইডি পাস দেওয়া হয়েছে ম্যাচ এ জয়েন করো।"
+  );
 
-  // Fetch messages from admin model (GET)
   const fetchMsg = async () => {
     try {
       const res = await axios.get(`/api/massage`, {
@@ -31,7 +30,6 @@ export default function ContactPage() {
     fetchMsg();
   }, []);
 
-  // Send message to admin (POST)
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!input.trim()) return;
@@ -43,19 +41,17 @@ export default function ContactPage() {
       });
       if (res.data.success) {
         setInput("");
-        fetchMsg(); // refresh message list
+        fetchMsg();
       }
     } catch (error) {
       console.log(error);
     }
   };
 
-  // NEW — Send notification request to Firebase route
   const handleNotificationSubmit = async (e) => {
     e.preventDefault();
 
-    // Join both inputs into one message
-    const finalMessage = `${customText} ${defaultNotificationText}`.trim();
+    const finalMessage = `${customText} ${fixedText}`.trim();
 
     if (!finalMessage) return;
 
@@ -65,7 +61,7 @@ export default function ContactPage() {
       });
 
       if (res.data.success) {
-        setCustomText(""); // clear only first input
+        setCustomText("");
         alert("Notification request sent!");
       }
     } catch (error) {
@@ -75,7 +71,6 @@ export default function ContactPage() {
 
   return (
     <div className="flex flex-col gap-4 bg-gray-900 text-white">
-      {/* Messages Section */}
       <div className="flex-1 overflow-y-auto p-4 space-y-3">
         {!messages ? (
           <p className="text-gray-400 text-center">No messages yet</p>
@@ -86,7 +81,6 @@ export default function ContactPage() {
         )}
       </div>
 
-      {/* Form 1 — Send message to Admin */}
       <form
         onSubmit={handleSubmit}
         className="p-4 bg-gray-800 border-t border-gray-700 items-center"
@@ -106,7 +100,6 @@ export default function ContactPage() {
         </button>
       </form>
 
-      {/* NEW — Send Notification */}
       <div className="w-full text-2xl items-center justify-center text-center my-4">
         <h2>Send Notification</h2>
       </div>
@@ -115,7 +108,6 @@ export default function ContactPage() {
         onSubmit={handleNotificationSubmit}
         className="p-4 bg-gray-800 border-t border-gray-700 items-center"
       >
-        {/* Input 1: Custom message (Empty always) */}
         <input
           type="text"
           value={customText}
@@ -124,12 +116,11 @@ export default function ContactPage() {
           className="w-full mb-4 p-2 rounded-lg bg-gray-700 text-white outline-none"
         />
 
-        {/* Input 2: Default fixed message */}
         <input
           type="text"
-          value={defaultNotificationText}
-          disabled
-          className="w-full mb-4 p-2 rounded-lg bg-gray-700 text-gray-300 outline-none"
+          value={fixedText}
+          onChange={(e) => setFixedText(e.target.value)}
+          className="w-full mb-4 p-2 rounded-lg bg-gray-700 text-white outline-none"
         />
 
         <button

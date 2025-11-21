@@ -1,32 +1,32 @@
 import admin from "firebase-admin";
-import fs from "fs";
-import path from "path";
 
 if (!admin.apps.length) {
-  const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_JSON);
-
   admin.initializeApp({
-    credential: admin.credential.cert(serviceAccount),
+    credential: admin.credential.cert({
+      project_id: process.env.FIREBASE_PROJECT_ID,
+      client_email: process.env.FIREBASE_CLIENT_EMAIL,
+      private_key: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, "\n"),
+    }),
   });
 }
 
 export async function POST(req) {
   try {
-    const body = await req.json();
-    const { text } = body;
+    const { text } = await req.json();
 
-    if (!text)
+    if (!text) {
       return new Response(
         JSON.stringify({ success: false, message: "Missing text" }),
         { status: 400 }
       );
+    }
 
     const message = {
       notification: {
         title: "Rush Arena",
         body: text,
       },
-      topic: "all", // ✅ Send to all devices subscribed to topic "all"
+      topic: "all",
     };
 
     const response = await admin.messaging().send(message);
@@ -35,7 +35,7 @@ export async function POST(req) {
       status: 200,
     });
   } catch (err) {
-    console.error("FCM send error", err);
+    console.error("FCM send error:", err);
     return new Response(
       JSON.stringify({ success: false, error: err.message }),
       { status: 500 }
