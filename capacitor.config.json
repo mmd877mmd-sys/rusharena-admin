@@ -1,6 +1,6 @@
 {
   "appId": "com.rusharenaadmin.app",
-  "appName": "Rush Arena Admin",
+  "appName": "Admin RushArena ",
   "webDir": "public",
   "bundledWebRuntime": false,
   "server": {
