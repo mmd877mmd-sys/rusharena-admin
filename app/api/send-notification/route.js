@@ -1,6 +1,6 @@
-import { connectDB } from "@/lib/connectDB";
-import admin from "@/lib/firebaseAdmin";
-import Tokens from "@/models/Tokens";
+import connectToDB from "../../../lib/mongodb";
+import Token from "../../../models/Token";
+import admin from "../../../lib/firebaseAdmin";
 
 export async function POST(request) {
   try {
@@ -17,11 +17,9 @@ export async function POST(request) {
       );
     }
 
-    // Connect to DB
-    await connectDB();
+    await connectToDB();
 
-    // Get all tokens
-    const tokens = await Tokens.find().select("token -_id");
+    const tokens = await Token.find().select("token -_id");
     const tokenList = tokens.map((t) => t.token);
 
     if (tokenList.length === 0) {
@@ -31,16 +29,18 @@ export async function POST(request) {
       );
     }
 
-    // Create message payload
-    const payload = {
-      notification: {
-        title,
-        body: message,
-      },
+    // Use sendMulticast for multiple tokens
+    const messagePayload = {
+      notification: { title, body: message },
+      tokens: tokenList,
     };
 
-    // Send notification
-    const response = await admin.messaging().sendToDevice(tokenList, payload);
+    const response = await admin.messaging().sendMulticast(messagePayload);
+
+    // Optionally: remove invalid tokens
+    // const invalidTokens = response.responses
+    //   .map((resp, idx) => (!resp.success ? tokenList[idx] : null))
+    //   .filter(Boolean);
 
     return new Response(JSON.stringify({ success: true, response }), {
       status: 200,
