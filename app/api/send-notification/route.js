@@ -1,6 +1,6 @@
-import connectToDB from "../../../lib/mongodb";
-import Token from "../../../models/Token";
-import admin from "../../../lib/firebaseAdmin";
+import { connectDB } from "@/lib/connectDB";
+import admin from "@/lib/firebaseAdmin";
+import Tokens from "@/models/Tokens";
 
 export async function POST(request) {
   try {
@@ -17,9 +17,9 @@ export async function POST(request) {
       );
     }
 
-    await connectToDB();
+    await connectDB();
 
-    const tokens = await Token.find().select("token -_id");
+    const tokens = await Tokens.find().select("token -_id");
     const tokenList = tokens.map((t) => t.token);
 
     if (tokenList.length === 0) {
