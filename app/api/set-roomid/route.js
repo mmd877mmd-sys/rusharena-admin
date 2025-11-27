@@ -1,8 +1,7 @@
 import { connectDB } from "@/lib/connectDB";
-import { sendGlobalNotification } from "@/lib/sendNotification";
+// import { sendGlobalNotification } from "@/lib/sendNotification";
 import Matches from "@/models/matches";
 import { NextResponse } from "next/server";
-// import { sendBroadcastNotification } from "@/lib/notifications";
 
 export async function POST(req) {
   try {
@@ -43,12 +42,12 @@ export async function POST(req) {
 
     // -----------------------------
     // Send broadcast notification
-    const result = await sendGlobalNotification({
-      title: "Rush Arena Match Update  ",
-      body: `${
-        match.matchType || "Rush Arena"
-      } Match এর Room Details দেওয়া হয়েছে . Please Check and Join the Match as soon ass pssible`,
-    });
+    // const result = await sendGlobalNotification({
+    //   title: "Rush Arena Match Update  ",
+    //   body: `${
+    //     match.matchType || "Rush Arena"
+    //   } Match এর Room Details দেওয়া হয়েছে . Please Check and Join the Match as soon ass pssible`,
+    // });
 
     return NextResponse.json(
       {
