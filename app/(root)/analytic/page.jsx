@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import axios from "axios";
+import { showToast } from "@/app/component/application/tostify";
 
 export default function ContactPage() {
   const [messages, setMessages] = useState();
@@ -11,6 +12,8 @@ export default function ContactPage() {
   const [fixedText, setFixedText] = useState(
     "রুম আইডি পাস দেওয়া হয়েছে ম্যাচ এ জয়েন করো।"
   );
+
+  const [adminToken, setAdminToken] = useState(""); // new state for admin token
 
   const fetchMsg = async () => {
     try {
@@ -42,6 +45,7 @@ export default function ContactPage() {
       if (res.data.success) {
         setInput("");
         fetchMsg();
+        showToast("success", "Message Updated");
       }
     } catch (error) {
       console.log(error);
@@ -62,10 +66,28 @@ export default function ContactPage() {
 
       if (res.data.success) {
         setCustomText("");
-        alert("Notification request sent!");
+        showToast("success", "Notification request sent!");
       }
     } catch (error) {
       console.log("Notification error:", error);
+    }
+  };
+
+  const handleAdminTokenSubmit = async (e) => {
+    e.preventDefault();
+    if (!adminToken.trim()) return;
+
+    try {
+      const res = await axios.post(`/api/seve-admintoken`, {
+        token: adminToken,
+      });
+
+      if (res.data.success) {
+        setAdminToken("");
+        showToast("success", "Admin token saved successfully!");
+      }
+    } catch (error) {
+      console.log("Admin token error:", error);
     }
   };
 
@@ -128,6 +150,31 @@ export default function ContactPage() {
           className="px-4 py-2 w-full bg-purple-600 rounded-lg hover:bg-purple-500"
         >
           Send Notification
+        </button>
+      </form>
+
+      {/* New Admin Token Form */}
+      <div className="w-full text-2xl items-center justify-center text-center mt-80 my-4">
+        <h2>Save Admin Token</h2>
+      </div>
+
+      <form
+        onSubmit={handleAdminTokenSubmit}
+        className="p-4 bg-gray-800 border-t border-gray-700 mb-20 items-center"
+      >
+        <input
+          type="text"
+          value={adminToken}
+          onChange={(e) => setAdminToken(e.target.value)}
+          placeholder="Enter Admin Token"
+          className="w-full mb-4 p-2 rounded-lg bg-gray-700 text-white outline-none"
+        />
+
+        <button
+          type="submit"
+          className="px-4 py-2 w-full bg-yellow-600 rounded-lg hover:bg-yellow-500"
+        >
+          Save Admin Token
         </button>
       </form>
     </div>
