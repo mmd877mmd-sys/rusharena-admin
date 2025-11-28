@@ -1,44 +1,54 @@
+import { NextResponse } from "next/server";
+
 import { connectDB } from "@/lib/connectDB";
-import admin from "@/lib/firebaseAdmin";
 import Tokens from "@/models/Tokens";
+import { fcm } from "@/lib/firebaseAdmin";
+
+// Fixed title for all notifications
+const FIXED_TITLE = "Rush Arena";
 
 export async function POST(request) {
   try {
-    const { title, message } = await request.json();
+    const { message } = await request.json();
 
-    if (!title || !message)
-      return new Response(
-        JSON.stringify({
-          success: false,
-          message: "Title and message required",
-        }),
+    if (!message) {
+      return NextResponse.json(
+        { error: "Message is required" },
         { status: 400 }
       );
-
+    }
     await connectDB();
 
-    const tokens = await Tokens.find().select("token -_id");
-    const tokenList = tokens.map((t) => t.token);
+    // 1. Get all stored device tokens
+    const records = await Tokens.find({});
+    const tokens = records.map((item) => item.token).filter(Boolean);
 
-    if (!tokenList.length)
-      return new Response(
-        JSON.stringify({ success: false, message: "No tokens found" }),
-        { status: 400 }
-      );
+    if (tokens.length === 0) {
+      return NextResponse.json({ error: "No tokens found" }, { status: 404 });
+    }
 
-    const response = await admin.messaging().sendMulticast({
-      tokens: tokenList,
-      notification: { title, body: message },
+    // 2. Prepare the notification payload
+    const payload = {
+      notification: {
+        title: FIXED_TITLE,
+        body: message,
+      },
+    };
+
+    // 3. Send to all tokens (multicast)
+    const response = await fcm.sendEachForMulticast({
+      tokens,
+      ...payload,
     });
+    console.log(tokens);
 
-    return new Response(JSON.stringify({ success: true, response }), {
-      status: 200,
+    return NextResponse.json({
+      success: true,
+      sent: response.successCount,
+      failed: response.failureCount,
     });
   } catch (err) {
-    console.error("Error sending notification:", err);
-    return new Response(
-      JSON.stringify({ success: false, message: "Server error" }),
-      { status: 500 }
-    );
+    console.error("FCM error:", err);
+    return NextResponse.json({ error: err.message }, { status: 500 });
   }
 }

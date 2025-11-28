@@ -57,7 +57,6 @@ export default function ContactPage() {
 
     try {
       const res = await axios.post(`/api/send-notification`, {
-        title: "Rush Arena ",
         message: finalMessage,
       });
 
