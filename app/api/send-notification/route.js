@@ -40,7 +40,7 @@ export async function POST(request) {
       tokens,
       ...payload,
     });
-    console.log(tokens);
+    // console.log(tokens);
 
     return NextResponse.json({
       success: true,
