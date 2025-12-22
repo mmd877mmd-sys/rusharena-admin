@@ -78,7 +78,6 @@ export default function TournamentForm() {
       const res = await axios.post("/api/addMatch", { data }); // match API structure
       if (res?.data?.success) {
         showToast("success", "Added successfully");
-        form.reset();
       } else {
         showToast("error", res?.data?.message || "Something went wrong");
       }
