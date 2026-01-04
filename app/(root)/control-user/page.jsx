@@ -20,11 +20,11 @@ export default function AdminUserControl() {
         setUsers(res.data.data || []);
         setFilteredUsers(res.data.data || []);
       } else {
-        showToast(res.data.message || "Failed to fetch users");
+        showToast("error", res.data.message || "Failed to fetch users");
       }
     } catch (error) {
       console.error(error);
-      showToast("Failed to fetch users");
+      showToast("error", "Failed to fetch users");
     } finally {
       setLoading(false);
     }
@@ -56,7 +56,7 @@ export default function AdminUserControl() {
 
   const copyToClipboard = (text) => {
     navigator.clipboard.writeText(text);
-    showToast("Copied to clipboard!");
+    showToast("info", "Copied to clipboard!");
   };
 
   // Update balances
@@ -70,14 +70,14 @@ export default function AdminUserControl() {
       });
 
       if (res.data.success) {
-        showToast("User balances updated successfully!");
+        showToast("info", "User balances updated successfully!");
         fetchUsers();
       } else {
-        showToast(res.data.message || "Failed to update balances");
+        showToast("error", res.data.message || "Failed to update balances");
       }
     } catch (error) {
       console.error(error);
-      showToast("Failed to update balances");
+      showToast("error", "Failed to update balances");
     } finally {
       setUpdatingId(null);
     }
@@ -111,8 +111,17 @@ export default function AdminUserControl() {
               key={user._id}
               className="p-5 bg-[#443838] rounded-xl shadow-lg border border-gray-800 hover:border-blue-500 transition-all"
             >
-              <h2 className="text-lg font-bold text-white mb-3">{user.name}</h2>
-
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-lg font-bold text-white mb-3">
+                  {user.name}
+                </h2>{" "}
+                <button
+                  onClick={() => copyToClipboard(user._id)}
+                  className="text-xs bg-green-600 hover:bg-blue-700 px-2 py-1 rounded-md text-white"
+                >
+                  Copy Token
+                </button>
+              </div>
               {/* User Info Fields */}
               {[
                 { label: "Email", value: user.email },

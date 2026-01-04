@@ -3,29 +3,35 @@ import adminTokens from "@/models/adminTokens";
 
 export async function POST(request) {
   try {
-    const body = await request.json();
-    const { token } = body;
+    const { token } = await request.json();
 
     if (!token) {
       return new Response(
         JSON.stringify({ success: false, message: "Token is required" }),
-        {
-          status: 400,
-          headers: { "Content-Type": "application/json" },
-        }
+        { status: 400, headers: { "Content-Type": "application/json" } }
       );
     }
 
     await connectDB();
 
-    // Save token or update timestamp if it already exists
-    await adminTokens.updateOne({ token }, { token }, { upsert: true });
+    const result = await adminTokens.findOneAndUpdate(
+      { token }, // find by token
+      {
+        $setOnInsert: { token }, // insert only if not exists
+      },
+      {
+        upsert: true,
+        new: false, // false → tells us if it already existed
+      }
+    );
 
-    return new Response(JSON.stringify({ success: true }), {
-      status: 200,
-      headers: { "Content-Type": "application/json" },
-      data: token,
-    });
+    return new Response(
+      JSON.stringify({
+        success: true,
+        message: result ? "Token already exists" : "New token saved",
+      }),
+      { status: 200, headers: { "Content-Type": "application/json" } }
+    );
   } catch (err) {
     console.error("Error saving token:", err);
     return new Response(
