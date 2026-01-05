@@ -30,6 +30,7 @@ import axios from "axios";
 
 import RoomPopup from "./roomDetalpopup";
 import PrizePopup from "./prizePopup";
+import { no } from "zod/v4/locales";
 
 // ✅ helper to get image based on type
 const getMatchImage = (matchType) => {
@@ -61,7 +62,7 @@ const PlayMatch = ({ type }) => {
   const [confirmDelete, setConfirmDelete] = useState(null); // ✅ holds match id to delete
 
   const form = useForm({
-    defaultValues: { roomId: "", roomPass: "" },
+    defaultValues: { roomId: "", roomPass: "", notification: "" },
   });
 
   const formatDate = (date) =>
@@ -116,6 +117,18 @@ const PlayMatch = ({ type }) => {
         showToast("success", res.data.message || "Added successfully");
       } else {
         showToast("error", res?.data?.message || "Something went wrong");
+        return;
+      }
+
+      const notificationRes = await axios.post(`/api/roomId-notification`, {
+        message: data.notification,
+        matchId: roomIdFor,
+      });
+
+      if (notificationRes?.data?.success) {
+        showToast("success", "Notification sent!");
+      } else {
+        showToast("error", "Notification did not sent!");
       }
     } catch (err) {
       showToast("error", err.message);
@@ -382,6 +395,20 @@ const PlayMatch = ({ type }) => {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Room Password</FormLabel>
+                    <FormControl>
+                      <Input {...field} type="text" />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="notification"
+                rules={{ required: "Notification is required" }}
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Notification</FormLabel>
                     <FormControl>
                       <Input {...field} type="text" />
                     </FormControl>
