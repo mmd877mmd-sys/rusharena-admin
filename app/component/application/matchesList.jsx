@@ -126,7 +126,10 @@ const PlayMatch = ({ type }) => {
       });
 
       if (notificationRes?.data?.success) {
-        showToast("success", "Notification sent!");
+        showToast(
+          "success",
+          `${notificationRes.data.sent} Device Notification sent!`
+        );
       } else {
         showToast("error", "Notification did not sent!");
       }
