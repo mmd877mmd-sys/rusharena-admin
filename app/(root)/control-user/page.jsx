@@ -10,6 +10,7 @@ export default function AdminUserControl() {
   const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(false);
   const [updatingId, setUpdatingId] = useState(null);
+  const [tokenFinding, setTokenFinding] = useState(null);
 
   // Fetch all users
   const fetchUsers = async () => {
@@ -82,6 +83,24 @@ export default function AdminUserControl() {
       setUpdatingId(null);
     }
   };
+  const handleTokenCopy = async (userId) => {
+    setTokenFinding(true);
+    try {
+      const res = await axios.post("/api/get-admintoken", { userId });
+      if (res.data.success) {
+        const token = res.data.data.token;
+        navigator.clipboard.writeText(token);
+        showToast("info", "Admin token copied to clipboard!");
+      } else {
+        showToast("error", res.data.message || "Failed to get admin token");
+      }
+    } catch (error) {
+      console.error(error);
+      showToast("error", "Failed to get admin token");
+    } finally {
+      setTokenFinding(null);
+    }
+  };
 
   return (
     <div className="p-6 min-h-screen bg-gray-950 text-gray-100">
@@ -116,10 +135,10 @@ export default function AdminUserControl() {
                   {user.name}
                 </h2>{" "}
                 <button
-                  onClick={() => copyToClipboard(user._id)}
+                  onClick={() => handleTokenCopy(user._id)}
                   className="text-xs bg-green-600 hover:bg-blue-700 px-2 py-1 rounded-md text-white"
                 >
-                  Copy Token
+                  {tokenFinding === user._id ? "Finding..." : "Copy Token"}
                 </button>
               </div>
               {/* User Info Fields */}

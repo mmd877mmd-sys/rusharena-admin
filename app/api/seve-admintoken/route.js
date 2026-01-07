@@ -7,28 +7,28 @@ export async function POST(request) {
 
     if (!token) {
       return new Response(
-        JSON.stringify({ success: false, message: "Token is required" }),
+        JSON.stringify({
+          success: false,
+          message: "Token and userId are required",
+        }),
         { status: 400, headers: { "Content-Type": "application/json" } }
       );
     }
 
     await connectDB();
 
+    //  here check if token exists, if yes update else create new
     const result = await adminTokens.findOneAndUpdate(
-      { token }, // find by token
-      {
-        $setOnInsert: { token }, // insert only if not exists
-      },
-      {
-        upsert: true,
-        new: false, // false → tells us if it already existed
-      }
+      { token },
+      { token },
+      { upsert: true, new: true }
     );
 
     return new Response(
       JSON.stringify({
         success: true,
-        message: result ? "Token already exists" : "New token saved",
+        message: "Token saved/updated successfully",
+        data: result,
       }),
       { status: 200, headers: { "Content-Type": "application/json" } }
     );
