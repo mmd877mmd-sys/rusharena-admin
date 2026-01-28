@@ -9,9 +9,6 @@ export default function ContactPage() {
   const [input, setInput] = useState("");
 
   const [customText, setCustomText] = useState("");
-  const [fixedText, setFixedText] = useState(
-    "রুম আইডি পাস দেওয়া হয়েছে ম্যাচ এ জয়েন করো।"
-  );
 
   const [adminToken, setAdminToken] = useState(""); // new state for admin token
 
@@ -55,7 +52,7 @@ export default function ContactPage() {
   const handleNotificationSubmit = async (e) => {
     e.preventDefault();
 
-    const finalMessage = `${customText} ${fixedText}`.trim();
+    const finalMessage = `${customText} `.trim();
 
     if (!finalMessage) return;
 
@@ -135,13 +132,6 @@ export default function ContactPage() {
           value={customText}
           onChange={(e) => setCustomText(e.target.value)}
           placeholder="Match Name"
-          className="w-full mb-4 p-2 rounded-lg bg-gray-700 text-white outline-none"
-        />
-
-        <input
-          type="text"
-          value={fixedText}
-          onChange={(e) => setFixedText(e.target.value)}
           className="w-full mb-4 p-2 rounded-lg bg-gray-700 text-white outline-none"
         />
 

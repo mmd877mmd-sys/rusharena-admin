@@ -1,11 +1,10 @@
 import { NextResponse } from "next/server";
-
 import { connectDB } from "@/lib/connectDB";
 import Tokens from "@/models/Tokens";
 import { fcm } from "@/lib/firebaseAdmin";
 
-// Fixed title for all notifications
 const FIXED_TITLE = "Rush Arena";
+const MAX_TOKENS_PER_BATCH = 500;
 
 export async function POST(request) {
   try {
@@ -14,20 +13,20 @@ export async function POST(request) {
     if (!message) {
       return NextResponse.json(
         { error: "Message is required" },
-        { status: 400 }
+        { status: 400 },
       );
     }
+
     await connectDB();
 
-    // 1. Get all stored device tokens
+    // 1. Fetch tokens
     const records = await Tokens.find({});
-    const tokens = records.map((item) => item.token).filter(Boolean);
+    const tokens = records.map((r) => r.token).filter(Boolean);
 
     if (tokens.length === 0) {
       return NextResponse.json({ error: "No tokens found" }, { status: 404 });
     }
 
-    // 2. Prepare the notification payload
     const payload = {
       notification: {
         title: FIXED_TITLE,
@@ -35,17 +34,27 @@ export async function POST(request) {
       },
     };
 
-    // 3. Send to all tokens (multicast)
-    const response = await fcm.sendEachForMulticast({
-      tokens,
-      ...payload,
-    });
-    // console.log(tokens);
+    let totalSuccess = 0;
+    let totalFailure = 0;
+
+    // 2. Send in batches of 500
+    for (let i = 0; i < tokens.length; i += MAX_TOKENS_PER_BATCH) {
+      const batchTokens = tokens.slice(i, i + MAX_TOKENS_PER_BATCH);
+
+      const response = await fcm.sendEachForMulticast({
+        tokens: batchTokens,
+        ...payload,
+      });
+
+      totalSuccess += response.successCount;
+      totalFailure += response.failureCount;
+    }
 
     return NextResponse.json({
       success: true,
-      sent: response.successCount,
-      failed: response.failureCount,
+      totalTokens: tokens.length,
+      sent: totalSuccess,
+      failed: totalFailure,
     });
   } catch (err) {
     console.error("FCM error:", err);

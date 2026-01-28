@@ -5,8 +5,8 @@ import Tokens from "@/models/Tokens";
 import { fcm } from "@/lib/firebaseAdmin";
 import matches from "@/models/matches";
 
-// Fixed title for all notifications
 const FIXED_TITLE = "Rush Arena";
+const MAX_TOKENS_PER_BATCH = 500;
 
 export async function POST(request) {
   try {
@@ -15,32 +15,39 @@ export async function POST(request) {
     if (!message) {
       return NextResponse.json(
         { error: "Message is required" },
-        { status: 400 }
+        { status: 400 },
       );
     }
+
+    if (!matchId) {
+      return NextResponse.json(
+        { error: "matchId is required" },
+        { status: 400 },
+      );
+    }
+
     await connectDB();
 
-    // 1. Get all stored device tokens
-    // const records = await Tokens.find({});
-    // const tokens = records.map((item) => item.token).filter(Boolean);
-    if (!matchId) {
-      return;
-    }
+    // 1. Get match & players
     const match = await matches.findById(matchId);
-    const players = match.joinedPlayers;
+    if (!match) {
+      return NextResponse.json({ error: "Match not found" }, { status: 404 });
+    }
 
-    const playerId = players.map((player) => player.authId);
+    const playerIds = match.joinedPlayers.map((player) => player.authId);
 
-    const tokenList = await Tokens.find({
-      userId: { $in: playerId },
+    // 2. Get tokens for match players
+    const tokenDocs = await Tokens.find({
+      userId: { $in: playerIds },
     });
-    const tokens = tokenList.map((item) => item.token);
+
+    const tokens = tokenDocs.map((item) => item.token).filter(Boolean);
 
     if (tokens.length === 0) {
       return NextResponse.json({ error: "No tokens found" }, { status: 404 });
     }
 
-    // 2. Prepare the notification payload
+    // 3. Notification payload
     const payload = {
       notification: {
         title: FIXED_TITLE,
@@ -48,17 +55,27 @@ export async function POST(request) {
       },
     };
 
-    // 3. Send to all tokens (multicast)
-    const response = await fcm.sendEachForMulticast({
-      tokens,
-      ...payload,
-    });
-    // console.log(tokens);
+    let totalSuccess = 0;
+    let totalFailure = 0;
+
+    // 4. Send in batches of 500
+    for (let i = 0; i < tokens.length; i += MAX_TOKENS_PER_BATCH) {
+      const batchTokens = tokens.slice(i, i + MAX_TOKENS_PER_BATCH);
+
+      const response = await fcm.sendEachForMulticast({
+        tokens: batchTokens,
+        ...payload,
+      });
+
+      totalSuccess += response.successCount;
+      totalFailure += response.failureCount;
+    }
 
     return NextResponse.json({
       success: true,
-      sent: response.successCount,
-      failed: response.failureCount,
+      totalTokens: tokens.length,
+      sent: totalSuccess,
+      failed: totalFailure,
     });
   } catch (err) {
     console.error("FCM error:", err);
