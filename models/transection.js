@@ -18,7 +18,11 @@ const TransactionSchema = new mongoose.Schema(
       required: true,
       trim: true,
     },
-
+trxId: {
+  type: String,
+  required: true,
+  unique: true,
+},
     phone: {
       type: String,
       required: true,
