@@ -17,7 +17,8 @@ const DipositSchema = new mongoose.Schema(
     trxId: {
       type: String,
       required: true,
-      trim: true,
+      trim: true, unique: true,
+      
     },
     phone: {
       type: String,
