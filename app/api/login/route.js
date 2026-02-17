@@ -55,7 +55,7 @@ export async function POST(request) {
 
     // Set cookie
     const headers = {
-      "Set-Cookie": cookie.serialize("access_token", token, {
+      "Set-Cookie": cookie.serialize("access_token_H", token, {
         httpOnly: false, // frontend/Capacitor can read it
         path: "/",
         sameSite: "lax",
