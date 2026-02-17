@@ -10,7 +10,7 @@ export default function ProtectedRoute({ children }) {
   useEffect(() => {
     async function checkAuth() {
       try {
-        const { value } = await Preferences.get({ key: "access_token" });
+        const { value } = await Preferences.get({ key: "access_token_H" });
         if (!value) {
           router.replace("/login"); // Redirect if not logged in
         }
